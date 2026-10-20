@@ -9,7 +9,8 @@ cd "$ROOT" || exit 1
 [ -f .env ] && set -a && . ./.env && set +a
 
 if ! railway status >/dev/null 2>&1; then
-  railway init --name meeting-to-action --workspace "${RAILWAY_WORKSPACE:-anasopie2's Projects}" >/dev/null 2>&1
+  WS=${RAILWAY_WORKSPACE:-"anasopie2's Projects"}
+  railway init --name meeting-to-action --workspace "$WS" >/dev/null 2>&1
   railway status >/dev/null 2>&1 || { echo "STEP init: not linked (Railway still refusing project creation)"; exit 2; }
 fi
 echo "STEP init: linked"

@@ -28,7 +28,7 @@ RECALL_SYSTEM = (
     "when nothing comes back. Then call ContextList with only the hits that matter now, for example: the same "
     "item was promised at an earlier meeting and is still open; an earlier decision conflicts with today's; a "
     "person already carries several open items. Quote the snippet and say in one clause why it matters. "
-    "Return an empty list rather than a stretch.")
+    "At most five hits, the ones the organiser would want mentioned. Return an empty list rather than a stretch.")
 
 DRAFT_SYSTEM = (
     "You write the follow-up the organiser sends after a meeting. From the digest and what earlier meetings "

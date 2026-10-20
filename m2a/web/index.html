@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meeting to Action</title>
+<meta name="description" content="Paste your meeting notes. Get the decisions, who does what by when, and the follow-up email, drafted against your earlier meetings and waiting for your approval.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* The desk after a meeting: a ruled notes pad on the left, and on the right the same words sorted out,
+   with every action item swiped by a yellow marker. The marker is the one loud thing on the page. */
+:root{
+  --paper:#F3F4F7; --sheet:#FFFFFF; --ink:#1B2434; --pencil:#5B6678; --faint:#8C96A8;
+  --rule:#D8DDE6; --rule-soft:#EAEDF2; --line:#DCE3F0;
+  --marker:#FFE86A; --marker-deep:#F2CF2A; --marker-ink:#5C4A00;
+  --decided:#1F7A5A; --decided-soft:#E4F3EC; --overdue:#B3261E; --overdue-soft:#FBE9E7;
+  --ink-btn:#1B2434; --ink-btn-hover:#2C3A55;
+  --display:"Bricolage Grotesque",system-ui,sans-serif; --body:"Figtree",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:400 16px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2.5px solid var(--marker-deep);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.015em;text-wrap:balance;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:22px 0 8px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{width:40px;height:40px;flex:none}
+.brand h1{font-size:23px;font-weight:800}
+.brand small{display:block;font-size:13.5px;color:var(--pencil);font-weight:500;margin-top:1px}
+.keybox{display:flex;align-items:center;gap:10px;background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:7px 8px 7px 12px}
+.keybox label{font-size:14px;font-weight:600}
+.keybox input{width:190px;border:1px solid var(--rule);background:var(--paper);border-radius:8px;padding:7px 10px;font-size:14px}
+.keybox .saved{font-size:13px;color:var(--decided);min-width:44px;font-weight:600}
+
+/* intro */
+.intro{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:end;padding:26px 0 26px;border-bottom:1px solid var(--rule)}
+.intro h2{font-size:clamp(28px,3.6vw,42px);font-weight:700;line-height:1.08}
+.intro h2 .mk{background:linear-gradient(104deg,transparent .6%,var(--marker) 2.2%,var(--marker) 94%,transparent 97%);padding:.02em .22em;margin:0 -.12em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.intro p{margin:12px 0 0;font-size:17px;color:var(--pencil);max-width:56ch}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--rule);border-radius:14px;background:var(--sheet);overflow:hidden}
+.step{padding:14px 14px 15px;border-left:1px solid var(--rule-soft);min-width:0}
+.step:first-child{border-left:0}
+.step b{display:block;font-family:var(--display);font-size:15.5px;font-weight:700}
+.step span{display:block;font-size:13.5px;color:var(--pencil);line-height:1.4;margin-top:3px}
+.step i{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--paper);border:1px solid var(--rule);font:600 12px/20px var(--body);text-align:center;font-style:normal;color:var(--pencil);margin-bottom:8px}
+.step.live i{background:var(--marker);border-color:var(--marker-deep);color:var(--marker-ink)}
+
+/* desk */
+.desk{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.18fr);gap:22px;padding:24px 0 10px;align-items:start}
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:16px;box-shadow:0 1px 0 rgba(27,36,52,.04),0 10px 30px -22px rgba(27,36,52,.25)}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px 12px;border-bottom:1px solid var(--rule-soft)}
+.sheet-h h2{font-size:18px;font-weight:700}
+.sheet-h .hint{font-size:13.5px;color:var(--pencil)}
+.pad{padding:18px 20px 20px}
+textarea.notes{width:100%;min-height:440px;resize:vertical;border:1px solid var(--rule);border-radius:12px;padding:14px 16px;line-height:28px;font-size:15.5px;background:
+  repeating-linear-gradient(to bottom,transparent 0 27px,var(--line) 27px 28px) 0 14px/100% 28px,var(--sheet)}
+textarea.notes::placeholder{color:var(--faint)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.btn{border:1px solid var(--ink-btn);background:var(--ink-btn);color:#fff;border-radius:10px;padding:10px 16px;font-weight:600;font-size:15px;cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--ink-btn-hover)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn.ghost:hover{background:var(--paper)}
+.btn.go{background:var(--marker);border-color:var(--marker-deep);color:var(--marker-ink)}
+.btn.go:hover{background:var(--marker-deep)}
+.btn.small{padding:6px 11px;font-size:13.5px;border-radius:8px}
+.status{font-size:14px;color:var(--pencil);min-height:1.4em}
+.status.err{color:var(--overdue)}
+
+/* results */
+.empty{padding:70px 24px;text-align:center;color:var(--pencil)}
+.empty b{display:block;font-family:var(--display);font-size:20px;color:var(--ink);margin-bottom:6px}
+.sec{padding:18px 20px;border-top:1px solid var(--rule-soft)}
+.sec:first-child{border-top:0}
+.sec h3{font-size:13px;font-weight:700;color:var(--pencil);letter-spacing:.02em;margin-bottom:10px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14.5px;color:var(--pencil)}
+.meta b{color:var(--ink);font-family:var(--display);font-size:20px;font-weight:700;width:100%}
+.summary{margin:10px 0 0;font-size:15.5px;max-width:66ch}
+ul.clean{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.dec{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;font-size:15.5px}
+.dec .tag{font:700 11.5px/1 var(--body);letter-spacing:.03em;color:var(--decided);background:var(--decided-soft);border-radius:6px;padding:5px 7px;margin-top:3px;white-space:nowrap}
+.dec small{display:block;color:var(--pencil);font-size:14px}
+.act{display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:baseline;font-size:15.5px;padding:2px 0}
+.act .who{font-weight:700;margin-right:6px}
+.act .mk{background:linear-gradient(104deg,transparent .6%,var(--marker) 2.2%,var(--marker) 94%,transparent 97%);padding:.05em .3em;margin:0 -.15em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.act .due{font-size:13.5px;color:var(--pencil);white-space:nowrap}
+.act .due.none{color:var(--faint)}
+.act small{grid-column:1/-1;color:var(--pencil);font-size:13.5px;margin-top:-4px}
+.q{font-size:15px;color:var(--ink)}
+.hit{border-left:3px solid var(--marker-deep);padding:4px 0 4px 12px;font-size:14.5px}
+.hit b{display:block;font-weight:600}
+.hit em{font-style:normal;color:var(--pencil)}
+.hit q{display:block;color:var(--pencil);font-size:14px;margin-top:2px}
+.letter{border:1px solid var(--rule);border-radius:12px;padding:16px 18px;font-size:15.3px;line-height:1.6;white-space:pre-wrap;background:#FCFCFD;max-width:68ch}
+.letter .subj{font-family:var(--display);font-weight:700;font-size:16.5px;margin-bottom:10px;display:block;border-bottom:1px solid var(--rule-soft);padding-bottom:8px}
+.chat{border:1px solid var(--rule);border-radius:12px;padding:12px 16px;font-size:14.8px;white-space:pre-wrap;background:var(--paper);max-width:68ch;margin-top:12px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.rem{font-size:14.5px;color:var(--pencil)}
+.rem b{color:var(--ink);font-weight:600}
+.review{background:linear-gradient(180deg,#FFFBE6,#FFF6C9);border-top:1px solid #F3E6A0;border-radius:0 0 16px 16px}
+.review textarea{width:100%;min-height:74px;resize:vertical;border:1px solid #E7D77E;border-radius:10px;padding:10px 12px;background:#fff;font-size:15px}
+.done-note{font-size:15px;padding:14px 18px;background:var(--decided-soft);color:var(--decided);border-radius:0 0 16px 16px;font-weight:600}
+.cap-note{font-size:15px;padding:14px 18px;background:var(--overdue-soft);color:var(--overdue);border-radius:0 0 16px 16px}
+
+/* open board */
+.board{margin:26px 0 48px}
+.board .sheet-h h2{font-size:20px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{text-align:left;font-size:12.5px;color:var(--pencil);font-weight:700;letter-spacing:.02em;padding:10px 12px;border-bottom:1px solid var(--rule)}
+td{padding:11px 12px;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+td.what .mk{background:linear-gradient(104deg,transparent .6%,var(--marker) 2.2%,var(--marker) 94%,transparent 97%);padding:.05em .3em;margin:0 -.15em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+td .mt{display:block;color:var(--pencil);font-size:13px;margin-top:2px}
+td.due.over{color:var(--overdue);font-weight:700}
+td.due.over::after{content:" overdue";font-weight:600;font-size:12.5px}
+.tbl{overflow-x:auto}
+.foot{color:var(--faint);font-size:13.5px;padding:0 0 30px}
+.foot a{color:var(--pencil)}
+
+@media (max-width:900px){
+  .intro{grid-template-columns:1fr}
+  .steps{grid-template-columns:repeat(2,1fr)}
+  .step:nth-child(3){border-left:0}
+  .step:nth-child(n+3){border-top:1px solid var(--rule-soft)}
+  .desk{grid-template-columns:1fr}
+  textarea.notes{min-height:300px}
+}
+@media (max-width:520px){
+  .keybox{width:100%}
+  .keybox input{flex:1;width:auto;min-width:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="4" y="5" width="32" height="30" rx="5" fill="#fff" stroke="#1B2434" stroke-width="2"/><path d="M10 14h20M10 20h20M10 26h12" stroke="#1B2434" stroke-width="2" stroke-linecap="round"/><path d="M9 25.5l15 0" stroke="#FFE86A" stroke-width="7" stroke-linecap="round" opacity=".95"/><path d="M10 26h12" stroke="#1B2434" stroke-width="2" stroke-linecap="round"/></svg>
+      <div><h1>Meeting to Action</h1><small>Notes in. Decisions, owners and the follow-up out, after your yes.</small></div>
+    </div>
+    <div class="keybox">
+      <label for="key">Access key</label>
+      <input id="key" type="password" autocomplete="off" placeholder="paste the key you were given">
+      <span class="saved" id="keySaved"></span>
+    </div>
+  </header>
+
+  <section class="intro">
+    <div>
+      <h2>Paste what was said.<br>Get <span class="mk">who does what, by when</span>, and the email that says so.</h2>
+      <p>The agent reads your notes, checks them against your earlier meetings so a promise made two weeks ago is not forgotten, drafts the follow-up, and then waits. Nothing is sent or remembered until you approve it.</p>
+    </div>
+    <ol class="steps" id="steps">
+      <li class="step" data-s="1"><i>1</i><b>Read</b><span>Decisions, action items, open questions, pulled from the notes.</span></li>
+      <li class="step" data-s="2"><i>2</i><b>Remember</b><span>Searches past meetings for carry-overs and conflicts.</span></li>
+      <li class="step" data-s="3"><i>3</i><b>Draft</b><span>Follow-up email, chat version, reminder dates.</span></li>
+      <li class="step" data-s="4"><i>4</i><b>You approve</b><span>Edit, ask for changes, or approve. Then it is saved.</span></li>
+    </ol>
+  </section>
+
+  <main class="desk">
+    <section class="sheet">
+      <div class="sheet-h"><h2>Your notes</h2><span class="hint">minutes, a transcript, a chat log, anything</span></div>
+      <div class="pad">
+        <textarea class="notes" id="notes" placeholder="Weekly sync, Tuesday. Present: Maria, Paolo, Ana...&#10;Paolo still owes the revised quote, will send Thursday.&#10;We went with homepage option B.&#10;Ken to switch the contact form inbox by tomorrow."></textarea>
+        <div class="row">
+          <button class="btn go" id="run">Sort it out</button>
+          <button class="btn ghost" id="example">Load example notes</button>
+          <span class="status" id="status"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="sheet" id="result">
+      <div class="empty"><b>Nothing sorted yet</b>Paste your notes on the left and press "Sort it out". It takes about half a minute.</div>
+    </section>
+  </main>
+
+  <section class="board sheet">
+    <div class="sheet-h"><h2>Still open</h2><div class="row" style="margin:0"><span class="hint" id="openCount"></span><button class="btn ghost small" id="refresh">Refresh</button></div></div>
+    <div class="tbl"><table>
+      <thead><tr><th>Who</th><th>What</th><th>By</th><th></th></tr></thead>
+      <tbody id="openRows"><tr><td colspan="4" class="hint" style="padding:18px 12px;color:var(--pencil)">Open action items from every approved meeting show up here.</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <p class="foot">Built by Alexander III Empleo with LangGraph, LangChain, Claude, Postgres, FastAPI and Terraform. Every run pauses for a human before anything is saved.</p>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const keyStore = {
+  get(){ try { return localStorage.getItem("m2a-key") || ""; } catch { return ""; } },
+  set(v){ try { localStorage.setItem("m2a-key", v); return true; } catch { return false; } }
+};
+$("key").value = keyStore.get();
+$("key").addEventListener("input", () => { $("keySaved").textContent = keyStore.set($("key").value.trim()) ? "saved" : ""; });
+
+const EXAMPLE = `Weekly sync, Tuesday 21 October 2026. Present: Maria, Paolo, Ana, Ken.
+
+Maria: Bayview Dental went live on Friday, the client is happy. Two small things came back. The contact form still sends to the old inbox, Ken please switch it to the hello@ address by tomorrow. And the opening hours on the footer are wrong, Ana will fix the text today.
+
+Paolo: I still owe the revised quote to Riverside Cafe, sorry, I will send it Thursday for sure.
+
+Ana showed two homepage options for the Riverside site. We went with option B, the photo-first one, because the cafe's photos are their strongest asset. Ana will prepare the mobile version by next Wednesday.
+
+Ken: three support tickets this week, all about the booking widget timing out on Safari. Paolo thinks it is the cookie setting and will check it this week.
+
+Maria: we need to decide whether we raise the hosting fee from January. Not decided today, parking it, Maria will come back with numbers.
+
+Next sync same time next Tuesday.`;
+$("example").onclick = () => { $("notes").value = EXAMPLE; $("notes").focus(); };
+
+async function api(path, body, method){
+  const headers = { "Content-Type": "application/json" };
+  const key = $("key").value.trim();
+  if (key) headers["X-API-Key"] = key;
+  const r = await fetch(path, { method: method || (body ? "POST" : "GET"), headers, body: body ? JSON.stringify(body) : undefined });
+  let data = null; try { data = await r.json(); } catch {}
+  if (!r.ok) {
+    const d = data && data.detail;
+    throw new Error(typeof d === "string" ? d : (Array.isArray(d) && d[0] && d[0].msg) || ("request failed (" + r.status + ")"));
+  }
+  return data;
+}
+
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const nice = (iso) => { if (!iso) return ""; const d = new Date(iso + "T00:00:00"); return d.toLocaleDateString(undefined, { weekday:"short", day:"numeric", month:"short" }); };
+function setStep(n){ document.querySelectorAll(".step").forEach(s => s.classList.toggle("live", +s.dataset.s === n)); }
+
+let current = null, timer = null;
+function setStatus(msg, err){ $("status").textContent = msg || ""; $("status").classList.toggle("err", !!err); }
+function startClock(label){
+  const t0 = Date.now();
+  clearInterval(timer);
+  timer = setInterval(() => setStatus(label + " " + Math.round((Date.now() - t0) / 1000) + " s"), 500);
+  setStatus(label);
+}
+function stopClock(){ clearInterval(timer); timer = null; }
+
+$("run").onclick = async () => {
+  const text = $("notes").value.trim();
+  if (text.length < 30) { setStatus("Paste a little more: at least a few sentences.", true); return; }
+  $("run").disabled = true; setStep(1); startClock("Reading, remembering, drafting...");
+  try {
+    current = await api("/runs", { notes_text: text });
+    stopClock(); setStatus(""); render(current);
+  } catch (e) { stopClock(); setStatus(e.message, true); setStep(0); }
+  $("run").disabled = false;
+};
+
+async function review(approved){
+  if (!current) return;
+  const notes = ($("revNotes") && $("revNotes").value.trim()) || "";
+  if (!approved && !notes) { $("revNotes").focus(); $("revNotes").placeholder = "Say what to change, then press again."; return; }
+  document.querySelectorAll("#result button").forEach(b => b.disabled = true);
+  startClock(approved ? "Saving..." : "Redrafting...");
+  try {
+    current = await api(`/runs/${current.run_id}/review`, { approved, notes });
+    stopClock(); setStatus(""); render(current);
+    if (current.status === "approved") loadActions();
+  } catch (e) { stopClock(); setStatus(e.message, true); document.querySelectorAll("#result button").forEach(b => b.disabled = false); }
+}
+
+function copyText(text, btn){
+  const done = () => { const old = btn.textContent; btn.textContent = "Copied"; setTimeout(() => btn.textContent = old, 1400); };
+  navigator.clipboard.writeText(text).then(done).catch(() => {
+    const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch {} ta.remove();
+  });
+}
+
+function render(run){
+  const m = run.meeting || {}, f = run.followup || {}, ctx = run.context || [];
+  setStep(run.status === "awaiting_review" ? 4 : 0);
+  const decisions = (m.decisions || []).map(d => `<li class="dec"><span class="tag">Decided</span><div>${esc(d.what)}${d.why ? `<small>because ${esc(d.why)}</small>` : ""}</div></li>`).join("") || `<li class="q" style="color:var(--pencil)">Nothing was settled in these notes.</li>`;
+  const actions = (m.actions || []).map(a => `<li class="act"><div><span class="who">${esc(a.owner)}</span><span class="mk">${esc(a.title)}</span></div><span class="due ${a.due ? "" : "none"}">${a.due ? "by " + nice(a.due) : "no date given"}</span>${a.note ? `<small>${esc(a.note)}</small>` : ""}</li>`).join("") || `<li class="q" style="color:var(--pencil)">No commitments found.</li>`;
+  const questions = (m.open_questions || []).map(q => `<li class="q">${esc(q)}</li>`).join("");
+  const hits = ctx.map(h => `<li class="hit"><b>${esc(h.title)}</b><em>${esc(h.relation)}</em><q>${esc(h.snippet)}</q></li>`).join("");
+  const reminders = (f.reminders || []).map(r => `<li class="rem"><b>${esc(nice(r.remind_on) || "no date")}</b>: nudge ${esc(r.owner)} about "${esc(r.action)}"</li>`).join("");
+
+  let tail = "";
+  if (run.status === "awaiting_review") {
+    tail = `<div class="sec review">
+      <h3>Your review${run.revisions ? ` (draft ${run.revisions + 1})` : ""}</h3>
+      <textarea id="revNotes" placeholder="Optional: what should change? For example, 'mention the Safari bug first' or 'make the email shorter'."></textarea>
+      <div class="row"><button class="btn" id="approve">Approve and save</button><button class="btn ghost" id="redo">Ask for changes</button><span class="hint">Approving saves the meeting and puts its action items on the open list.</span></div>
+    </div>`;
+  } else if (run.status === "approved") {
+    tail = `<div class="done-note">Approved and saved as meeting #${run.meeting_id}. The action items are on the open list below, and the next run will remember this meeting.</div>`;
+  } else if (run.status === "revision_cap") {
+    tail = `<div class="cap-note">Three redrafts reached without approval, so nothing was saved. Edit the notes and run again.</div>`;
+  }
+
+  $("result").innerHTML = `
+    <div class="sec">
+      <div class="meta"><b>${esc(m.title || "Meeting")}</b><span>${esc(nice(m.held_on))}</span><span>${esc((m.attendees || []).join(", "))}</span></div>
+      <p class="summary">${esc(m.summary || "")}</p>
+    </div>
+    <div class="sec"><h3>What was decided</h3><ul class="clean">${decisions}</ul></div>
+    <div class="sec"><h3>Who does what</h3><ul class="clean">${actions}</ul></div>
+    ${questions ? `<div class="sec"><h3>Still open</h3><ul class="clean">${questions}</ul></div>` : ""}
+    ${hits ? `<div class="sec"><h3>From earlier meetings</h3><ul class="clean">${hits}</ul></div>` : ""}
+    <div class="sec"><h3>Follow-up email</h3>
+      <div class="letter"><span class="subj">${esc(f.subject || "")}</span>${esc(f.email || "")}</div>
+      <div class="tools"><button class="btn ghost small" id="copyEmail">Copy email</button><button class="btn ghost small" id="copySubject">Copy subject</button></div>
+      <div class="chat">${esc(f.chat_summary || "")}</div>
+      <div class="tools"><button class="btn ghost small" id="copyChat">Copy chat version</button></div>
+      ${reminders ? `<h3 style="margin-top:16px">Reminders</h3><ul class="clean">${reminders}</ul>` : ""}
+    </div>
+    ${tail}`;
+
+  $("copyEmail").onclick = (e) => copyText(f.email || "", e.target);
+  $("copySubject").onclick = (e) => copyText(f.subject || "", e.target);
+  $("copyChat").onclick = (e) => copyText(f.chat_summary || "", e.target);
+  if ($("approve")) { $("approve").onclick = () => review(true); $("redo").onclick = () => review(false); }
+  $("result").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function loadActions(){
+  try {
+    const data = await api("/actions?status=open");
+    const rows = data.actions;
+    $("openCount").textContent = rows.length ? `${rows.length} open` : "nothing open";
+    $("openRows").innerHTML = rows.map(a => `<tr>
+      <td>${esc(a.owner)}</td>
+      <td class="what"><span class="mk">${esc(a.title)}</span><span class="mt">${esc(a.meeting)}</span></td>
+      <td class="due ${a.overdue ? "over" : ""}">${a.due ? nice(a.due) : "no date"}</td>
+      <td><button class="btn ghost small" data-done="${a.id}">Done</button></td></tr>`).join("")
+      || `<tr><td colspan="4" style="padding:18px 12px;color:var(--pencil)">Nothing open. Approve a meeting and its action items land here.</td></tr>`;
+    $("openRows").querySelectorAll("[data-done]").forEach(b => b.onclick = async () => {
+      b.disabled = true;
+      try { await api(`/actions/${b.dataset.done}/done`, {}, "POST"); loadActions(); } catch (e) { setStatus(e.message, true); b.disabled = false; }
+    });
+  } catch (e) {
+    $("openCount").textContent = "";
+    $("openRows").innerHTML = `<tr><td colspan="4" style="padding:18px 12px;color:var(--overdue)">${esc(e.message)}</td></tr>`;
+  }
+}
+$("refresh").onclick = loadActions;
+loadActions();
+</script>
+</body>
+</html>

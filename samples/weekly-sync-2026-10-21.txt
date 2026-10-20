@@ -1,0 +1,13 @@
+Weekly sync, Tuesday 21 October 2026. Present: Maria, Paolo, Ana, Ken.
+
+Maria: Bayview Dental went live on Friday, the client is happy. Two small things came back. The contact form still sends to the old inbox, Ken please switch it to the hello@ address by tomorrow. And the opening hours on the footer are wrong, Ana will fix the text today.
+
+Paolo: I still owe the revised quote to Riverside Cafe, sorry, I will send it Thursday for sure.
+
+Ana showed two homepage options for the Riverside site. We went with option B, the photo-first one, because the cafe's photos are their strongest asset. Ana will prepare the mobile version by next Wednesday.
+
+Ken: three support tickets this week, all about the booking widget timing out on Safari. Paolo thinks it is the cookie setting and will check it this week.
+
+Maria: we need to decide whether we raise the hosting fee from January. Not decided today, parking it, Maria will come back with numbers.
+
+Next sync same time next Tuesday.
